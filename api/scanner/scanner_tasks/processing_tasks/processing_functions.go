@@ -5,6 +5,7 @@ import (
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/repositories"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"github.com/pkg/errors"
@@ -23,7 +24,7 @@ func generateSaveHighResJPEG(tx *gorm.DB, media *models.Media, imageData *media_
 		return nil, err
 	}
 
-	fileStats, err := os.Stat(imagePath)
+	fileStats, err := repositories.GetDataRepository().Stat(imagePath)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading file stats of highres photo")
 	}
@@ -70,7 +71,6 @@ func generateSaveThumbnailJPEG(tx *gorm.DB, media *models.Media, thumbnail_name 
 	}
 
 	if mediaURL == nil {
-
 		mediaURL = &models.MediaURL{
 			MediaID:     media.ID,
 			MediaName:   thumbnail_name,

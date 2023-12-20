@@ -2,28 +2,26 @@ package scanner
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/repositories"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
 	"github.com/photoview/photoview/api/scanner/scanner_tasks"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
-	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Album, error) {
-
 	if !ValidRootPath(rootPath) {
 		return nil, ErrorInvalidRootPath
 	}
 
-	if !path.IsAbs(rootPath) {
+	if !repositories.GetDataRepository().IsAbs(rootPath) {
 		wd, err := os.Getwd()
 		if err != nil {
 			return nil, err
@@ -76,7 +74,7 @@ func NewRootAlbum(db *gorm.DB, rootPath string, owner *models.User) (*models.Alb
 var ErrorInvalidRootPath = errors.New("invalid root path")
 
 func ValidRootPath(rootPath string) bool {
-	_, err := os.Stat(rootPath)
+	_, err := repositories.GetDataRepository().Stat(rootPath)
 	if err != nil {
 		log.Printf("Warn: invalid root path: '%s'\n%s\n", rootPath, err)
 		return false
@@ -118,7 +116,7 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 
 	albumMedia := make([]*models.Media, 0)
 
-	dirContent, err := ioutil.ReadDir(ctx.GetAlbum().Path)
+	dirContent, err := repositories.GetDataRepository().ReadDir(ctx.GetAlbum().Path)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +124,7 @@ func findMediaForAlbum(ctx scanner_task.TaskContext) ([]*models.Media, error) {
 	for _, item := range dirContent {
 		mediaPath := path.Join(ctx.GetAlbum().Path, item.Name())
 
-		isDirSymlink, err := utils.IsDirSymlink(mediaPath)
+		isDirSymlink, err := IsDirSymlink(mediaPath)
 		if err != nil {
 			log.Printf("Cannot detect whether %s is symlink to a directory. Pretending it is not", mediaPath)
 			isDirSymlink = false

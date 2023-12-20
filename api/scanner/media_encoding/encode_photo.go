@@ -9,6 +9,7 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/repositories"
 	"github.com/photoview/photoview/api/scanner/media_encoding/executable_worker"
 	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"github.com/photoview/photoview/api/scanner/media_type"
@@ -22,12 +23,12 @@ import (
 )
 
 var thumbFilter = map[models.ThumbnailFilter]imaging.ResampleFilter{
-	models.ThumbnailFilterNearestNeighbor:  imaging.NearestNeighbor,
-	models.ThumbnailFilterBox:  imaging.Box,
-	models.ThumbnailFilterLinear:	imaging.Linear,
-	models.ThumbnailFilterMitchellNetravali:	imaging.MitchellNetravali,
-	models.ThumbnailFilterCatmullRom:	imaging.CatmullRom,
-	models.ThumbnailFilterLanczos:	imaging.Lanczos,
+	models.ThumbnailFilterNearestNeighbor:   imaging.NearestNeighbor,
+	models.ThumbnailFilterBox:               imaging.Box,
+	models.ThumbnailFilterLinear:            imaging.Linear,
+	models.ThumbnailFilterMitchellNetravali: imaging.MitchellNetravali,
+	models.ThumbnailFilterCatmullRom:        imaging.CatmullRom,
+	models.ThumbnailFilterLanczos:           imaging.Lanczos,
 }
 
 func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (*media_utils.PhotoDimensions, error) {
@@ -37,7 +38,13 @@ func EncodeThumbnail(db *gorm.DB, inputPath string, outputPath string) (*media_u
 		return nil, err
 	}
 
-	inputImage, err := imaging.Open(inputPath, imaging.AutoOrientation(true))
+	file, err := repositories.GetDataRepository().Open(inputPath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	inputImage, err := imaging.Decode(file, imaging.AutoOrientation(true))
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +160,7 @@ func (img *EncodeMediaData) photoImage() (image.Image, error) {
 }
 
 func (img *EncodeMediaData) decodeImage(imagePath string) (image.Image, error) {
-	file, err := os.Open(imagePath)
+	file, err := repositories.GetDataRepository().Open(imagePath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open file to decode image (%s)", imagePath)
 	}

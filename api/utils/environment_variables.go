@@ -15,6 +15,10 @@ const (
 	EnvUIPath                    EnvironmentVariable = "PHOTOVIEW_UI_PATH"
 	EnvMediaCachePath            EnvironmentVariable = "PHOTOVIEW_MEDIA_CACHE"
 	EnvFaceRecognitionModelsPath EnvironmentVariable = "PHOTOVIEW_FACE_RECOGNITION_MODELS_PATH"
+	EnvMinioHost                 EnvironmentVariable = "PHOTOVIEW_MINIO_HOST"
+	EnvMinioAccessKey            EnvironmentVariable = "PHOTOVIEW_MINIO_ACCESS_KEY"
+	EnvMinioSecretKey            EnvironmentVariable = "PHOTOVIEW_MINIO_SECRET_KEY"
+	EnvMinio                     EnvironmentVariable = "PHOTOVIEW_MINIO"
 )
 
 // Network related

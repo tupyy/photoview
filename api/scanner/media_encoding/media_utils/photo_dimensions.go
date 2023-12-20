@@ -2,7 +2,8 @@ package media_utils
 
 import (
 	"image"
-	"os"
+
+	"github.com/photoview/photoview/api/repositories"
 )
 
 type PhotoDimensions struct {
@@ -11,7 +12,7 @@ type PhotoDimensions struct {
 }
 
 func GetPhotoDimensions(imagePath string) (*PhotoDimensions, error) {
-	photoFile, err := os.Open(imagePath)
+	photoFile, err := repositories.GetDataRepository().Open(imagePath)
 	if err != nil {
 		return nil, err
 	}

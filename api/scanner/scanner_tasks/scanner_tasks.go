@@ -63,7 +63,7 @@ func (t scannerTasks) BeforeScanAlbum(ctx scanner_task.TaskContext) (scanner_tas
 	return ctx, nil
 }
 
-func (t scannerTasks) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.FileInfo, mediaPath string) (bool, error) {
+func (t scannerTasks) MediaFound(ctx scanner_task.TaskContext, fileInfo fs.DirEntry, mediaPath string) (bool, error) {
 	for _, task := range allTasks {
 		select {
 		case <-ctx.Done():

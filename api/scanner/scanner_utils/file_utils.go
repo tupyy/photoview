@@ -3,10 +3,12 @@ package scanner_utils
 import (
 	"log"
 	"os"
+
+	"github.com/photoview/photoview/api/repositories"
 )
 
 func FileExists(testPath string) bool {
-	_, err := os.Stat(testPath)
+	_, err := repositories.GetDataRepository().Stat(testPath)
 
 	if os.IsNotExist(err) {
 		return false

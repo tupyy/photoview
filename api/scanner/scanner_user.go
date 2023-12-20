@@ -3,16 +3,15 @@ package scanner
 import (
 	"bufio"
 	"container/list"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/repositories"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/scanner/scanner_tasks/cleanup_tasks"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
-	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	ignore "github.com/sabhiram/go-gitignore"
 	"gorm.io/gorm"
@@ -71,7 +70,7 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cach
 
 	for _, album := range userRootAlbums {
 		// Check if user album directory exists on the file system
-		if _, err := os.Stat(album.Path); err != nil {
+		if _, err := repositories.GetDataRepository().Stat(album.Path); err != nil {
 			if os.IsNotExist(err) {
 				scanErrors = append(scanErrors, errors.Errorf("Album directory for user '%s' does not exist '%s'\n", user.Username, album.Path))
 			} else {
@@ -97,7 +96,7 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cach
 		albumIgnore := albumInfo.ignore
 
 		// Read path
-		dirContent, err := ioutil.ReadDir(albumPath)
+		dirContent, err := repositories.GetDataRepository().ReadDir(albumPath)
 		if err != nil {
 			scanErrors = append(scanErrors, errors.Wrapf(err, "read directory (%s)", albumPath))
 			continue
@@ -200,7 +199,7 @@ func FindAlbumsForUser(db *gorm.DB, user *models.User, album_cache *scanner_cach
 				continue
 			}
 
-			isDirSymlink, err := utils.IsDirSymlink(subalbumPath)
+			isDirSymlink, err := IsDirSymlink(subalbumPath)
 			if err != nil {
 				scanErrors = append(scanErrors, errors.Wrapf(err, "could not check for symlink target of %s", subalbumPath))
 				continue
@@ -249,7 +248,7 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerC
 		}
 		ignoreEntries := ignore.CompileIgnoreLines(albumIgnore...)
 
-		dirContent, err := ioutil.ReadDir(dirPath)
+		dirContent, err := repositories.GetDataRepository().ReadDir(dirPath)
 		if err != nil {
 			scanner_utils.ScannerError("Could not read directory (%s): %s\n", dirPath, err.Error())
 			return false
@@ -258,7 +257,7 @@ func directoryContainsPhotos(rootPath string, cache *scanner_cache.AlbumScannerC
 		for _, fileInfo := range dirContent {
 			filePath := path.Join(dirPath, fileInfo.Name())
 
-			isDirSymlink, err := utils.IsDirSymlink(filePath)
+			isDirSymlink, err := IsDirSymlink(filePath)
 			if err != nil {
 				log.Printf("Cannot detect whether %s is symlink to a directory. Pretending it is not", filePath)
 				isDirSymlink = false

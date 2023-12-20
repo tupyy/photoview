@@ -3,10 +3,10 @@ package scanner
 import (
 	"context"
 	"log"
-	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/repositories"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/scanner_cache"
 	"github.com/photoview/photoview/api/scanner/scanner_task"
@@ -48,7 +48,7 @@ func ScanMedia(tx *gorm.DB, mediaPath string, albumId int, cache *scanner_cache.
 		mediaTypeText = models.MediaTypePhoto
 	}
 
-	stat, err := os.Stat(mediaPath)
+	stat, err := repositories.GetDataRepository().Stat(mediaPath)
 	if err != nil {
 		return nil, false, err
 	}

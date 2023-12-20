@@ -2,10 +2,10 @@ package processing_tasks
 
 import (
 	"fmt"
-	"os"
 	"path"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/repositories"
 	"github.com/photoview/photoview/api/scanner/media_encoding"
 	"github.com/photoview/photoview/api/scanner/media_encoding/media_utils"
 	"github.com/photoview/photoview/api/utils"
@@ -59,7 +59,7 @@ func saveOriginalPhotoToDB(tx *gorm.DB, photo *models.Media, imageData *media_en
 		return nil, err
 	}
 
-	fileStats, err := os.Stat(photo.Path)
+	fileStats, err := repositories.GetDataRepository().Stat(photo.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading file stats of original photo")
 	}

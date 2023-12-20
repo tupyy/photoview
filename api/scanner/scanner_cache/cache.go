@@ -2,10 +2,10 @@ package scanner_cache
 
 import (
 	"log"
-	"os"
 	"path"
 	"sync"
 
+	"github.com/photoview/photoview/api/repositories"
 	"github.com/photoview/photoview/api/scanner/media_type"
 	"github.com/photoview/photoview/api/scanner/scanner_utils"
 	"github.com/pkg/errors"
@@ -124,7 +124,7 @@ func (c *AlbumScannerCache) IsPathMedia(mediaPath string) bool {
 
 	if mediaType != nil {
 		// Make sure file isn't empty
-		fileStats, err := os.Stat(mediaPath)
+		fileStats, err := repositories.GetDataRepository().Stat(mediaPath)
 		if err != nil || fileStats.Size() == 0 {
 			return false
 		}

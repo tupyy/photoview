@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 
 	api "github.com/photoview/photoview/api/graphql"
 	"github.com/photoview/photoview/api/graphql/auth"
@@ -115,7 +116,9 @@ func (r *mutationResolver) InitialSetupWizard(ctx context.Context, username stri
 		return nil, errors.New("not initial setup")
 	}
 
-	rootPath = path.Clean(rootPath)
+	if !strings.HasPrefix(rootPath, "s3://") {
+		rootPath = path.Clean(rootPath)
+	}
 
 	var token *models.AccessToken
 

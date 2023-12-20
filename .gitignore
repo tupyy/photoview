@@ -3,6 +3,7 @@
 cache/
 /media_cache/
 /api/media_cache/
+/api/vendor
 /photos_path
 photoview.db
 photoview.db-journal

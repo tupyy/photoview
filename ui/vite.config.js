@@ -10,6 +10,15 @@ export default defineConfig({
   envPrefix: ['VITE_', 'REACT_APP_'],
   server: {
     port: 1234,
+    proxy: {
+        '/photo/': 'http://localhost:4001/',
+        '/graphql': {
+             target: 'http://localhost:4001',
+             changeOrigin: true,
+             secure: false,      
+             ws: true,
+         }
+    },
   },
   esbuild: {
     logOverride: { 'this-is-undefined-in-esm': 'silent' },

@@ -43,3 +43,4 @@ yarn-error.log*
 .vscode
 __debug_bin
 .idea
+/api/vendor

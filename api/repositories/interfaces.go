@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"os"
+	"strings"
 
 	"github.com/photoview/photoview/api/utils"
 )
@@ -16,6 +17,7 @@ type RepositoryReader interface {
 
 type File interface {
 	Read(b []byte) (n int, err error)
+	Seek(offset int64, whence int) (int64, error)
 	Close() error
 }
 
@@ -28,4 +30,15 @@ func GetDataRepository() RepositoryReader {
 		return m
 	}
 	return NewFileSystemReader()
+}
+
+func GetDataSourceByPath(chachedPath string) RepositoryReader {
+	if strings.Contains(chachedPath, "thumbnail") {
+		return NewFileSystemReader()
+	}
+	m, err := NewMinioReader("localhost:9000", utils.EnvMinioAccessKey.GetValue(), utils.EnvMinioSecretKey.GetValue())
+	if err != nil {
+		panic(err)
+	}
+	return m
 }

@@ -4,11 +4,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
+	"time"
 
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 
 	"github.com/photoview/photoview/api/graphql/models"
+	"github.com/photoview/photoview/api/repositories"
 	"github.com/photoview/photoview/api/scanner"
 )
 
@@ -43,7 +46,7 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 			return
 		}
 
-		if _, err := os.Stat(cachedPath); os.IsNotExist((err)) {
+		if _, err := repositories.GetDataSourceByPath(cachedPath).Stat(cachedPath); os.IsNotExist((err)) {
 			// err := db.Transaction(func(tx *gorm.DB) error {
 			if err = scanner.ProcessSingleMedia(db, media); err != nil {
 				log.Printf("ERROR: processing image not found in cache (%s): %s\n", cachedPath, err)
@@ -52,7 +55,7 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 				return
 			}
 
-			if _, err = os.Stat(cachedPath); err != nil {
+			if _, err = repositories.GetDataSourceByPath(cachedPath).Stat(cachedPath); err != nil {
 				log.Printf("ERROR: after reprocessing image not found in cache (%s): %s\n", cachedPath, err)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte("internal server error"))
@@ -63,6 +66,19 @@ func RegisterPhotoRoutes(db *gorm.DB, router *mux.Router) {
 		// Allow caching the resource for 1 day
 		w.Header().Set("Cache-Control", "private, max-age=86400, immutable")
 
-		http.ServeFile(w, r, cachedPath)
+		reader := repositories.GetDataSourceByPath(cachedPath)
+		switch reader.(type) {
+		case *repositories.FileSystemReader:
+			http.ServeFile(w, r, cachedPath)
+		case *repositories.MinioReader:
+			file, err := reader.Open(cachedPath)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("internal server error"))
+				return
+			}
+			http.ServeContent(w, r, path.Base(cachedPath), time.Now(), file)
+		}
+
 	})
 }

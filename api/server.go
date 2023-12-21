@@ -111,7 +111,10 @@ func main() {
 		if !shouldServeUI {
 			log.Printf("Notice: UI is not served by the the api (%s=0)", utils.EnvServeUI.GetName())
 		}
+	}
 
+	if utils.EnvMinio.GetBool() {
+		log.Printf("Using minio as storage: %s", utils.EnvMinioHost.GetValue())
 	}
 
 	log.Panic(http.ListenAndServe(":"+apiListenURL.Port(), handlers.CompressHandler(rootRouter)))

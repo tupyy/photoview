@@ -36,7 +36,7 @@ func GetDataSourceByPath(chachedPath string) RepositoryReader {
 	if strings.Contains(chachedPath, "thumbnail") {
 		return NewFileSystemReader()
 	}
-	m, err := NewMinioReader("localhost:9000", utils.EnvMinioAccessKey.GetValue(), utils.EnvMinioSecretKey.GetValue())
+	m, err := NewMinioReader(utils.EnvMinioHost.GetValue(), utils.EnvMinioAccessKey.GetValue(), utils.EnvMinioSecretKey.GetValue())
 	if err != nil {
 		panic(err)
 	}

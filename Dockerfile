@@ -16,88 +16,51 @@ ARG BUILD_DATE
 ENV BUILD_DATE=${BUILD_DATE:-undefined}
 ENV REACT_APP_BUILD_DATE=${BUILD_DATE:-undefined}
 
-ARG COMMIT_SHA
-ENV COMMIT_SHA=${COMMIT_SHA:-}
-ENV REACT_APP_BUILD_COMMIT_SHA=${COMMIT_SHA:-}
+ARG GIT_COMMIT
+ENV COMMIT_SHA=${GIT_COMMIT:-}
+ENV REACT_APP_BUILD_COMMIT_SHA=${GIT_COMMIT:-}
 
 RUN mkdir -p /app
 WORKDIR /app
 
 # Download dependencies
 COPY ui/package*.json /app/
-RUN npm ci --omit=dev --ignore-scripts
+RUN npm install --omit=dev --ignore-scripts
 
 # Build frontend
 COPY ui /app
 RUN npm run build -- --base=$UI_PUBLIC_URL
 
 ### Build API ###
-FROM --platform=${BUILDPLATFORM:-linux/amd64} debian:bookworm AS api
-ARG TARGETPLATFORM
+FROM golang:1.20 AS api
 
-COPY docker/install_build_dependencies.sh /tmp/
-RUN chmod +x /tmp/install_build_dependencies.sh && /tmp/install_build_dependencies.sh
-
-COPY docker/go_wrapper.sh /go/bin/go
-RUN chmod +x /go/bin/go
-ENV GOPATH="/go"
-ENV PATH="${GOPATH}/bin:${PATH}"
-
-ENV CGO_ENABLED 1
-
-RUN go env
-
-RUN mkdir -p /app
 WORKDIR /app
 
-# Download dependencies
-COPY api/go.mod api/go.sum /app/
-RUN go mod download
+COPY api/ .
+RUN if [ ! -d "./vendor" ]; then go mod vendor; fi
 
-# Patch go-face
-RUN sed -i 's/-march=native//g' ${GOPATH}/pkg/mod/github.com/!kagami/go-face*/face.go
-
-# Build dependencies that use CGO
-RUN go install \
-  github.com/mattn/go-sqlite3 \
-  github.com/Kagami/go-face
-
-# Copy and build api source
-COPY api /app
-RUN go build -v -o photoview .
+RUN GOOS=linux GOARCH=amd64 go build -o photoview server.go
 
 ### Copy api and ui to production environment ###
-FROM debian:bookworm
-ARG TARGETPLATFORM
+FROM fedora:39
+
 WORKDIR /app
 
-COPY api/data /app/data
+RUN dnf update -y && dnf install -y ffmpeg-free perl-Image-ExifTool
+RUN useradd -u 1000 photoview
 
-RUN apt update \
-  # Required dependencies
-  && apt install -y curl gpg libdlib19.1 ffmpeg exiftool libheif1
-
-# Install Darktable if building for a supported architecture
-RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ] || [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
-  apt install -y darktable; fi
-
-# Remove build dependencies and cleanup
-RUN apt purge -y gpg \
-  && apt autoremove -y \
-  && apt clean \
-  && rm -rf /var/lib/apt/lists/*
-
-COPY --from=ui /app/dist /ui
+COPY --from=ui /app/dist /app/ui
 COPY --from=api /app/photoview /app/photoview
+RUN chown -R photoview /app
+
+USER photoview
 
 ENV PHOTOVIEW_LISTEN_IP 127.0.0.1
-ENV PHOTOVIEW_LISTEN_PORT 80
+ENV PHOTOVIEW_LISTEN_PORT 8080
 
 ENV PHOTOVIEW_SERVE_UI 1
-ENV PHOTOVIEW_UI_PATH /ui
+ENV PHOTOVIEW_UI_PATH /app/ui
 
-EXPOSE 80
-
-HEALTHCHECK --interval=60s --timeout=10s CMD curl --fail 'http://localhost:80/api/graphql' -X POST -H 'Content-Type: application/json' --data-raw '{"operationName":"CheckInitialSetup","variables":{},"query":"query CheckInitialSetup { siteInfo { initialSetup }}"}'
+EXPOSE 8080
 
 ENTRYPOINT ["/app/photoview"]

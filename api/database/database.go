@@ -166,10 +166,6 @@ var database_models []interface{} = []interface{}{
 	&models.UserMediaData{},
 	&models.UserAlbums{},
 	&models.UserPreferences{},
-
-	// Face detection
-	&models.FaceGroup{},
-	&models.ImageFace{},
 }
 
 func MigrateDatabase(db *gorm.DB) error {

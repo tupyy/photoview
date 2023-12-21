@@ -12,7 +12,6 @@ import (
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/models/actions"
 	"github.com/photoview/photoview/api/scanner"
-	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/photoview/photoview/api/utils"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -348,13 +347,6 @@ func (r *mutationResolver) UserRemoveRootAlbum(ctx context.Context, userID int, 
 			cacheAlbumPath := path.Join(utils.MediaCachePath(), strconv.Itoa(id))
 
 			if err := os.RemoveAll(cacheAlbumPath); err != nil {
-				return nil, err
-			}
-		}
-
-		// Reload faces as media might have been deleted
-		if face_detection.GlobalFaceDetector != nil {
-			if err := face_detection.GlobalFaceDetector.ReloadFacesFromDatabase(db); err != nil {
 				return nil, err
 			}
 		}

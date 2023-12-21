@@ -9,7 +9,6 @@ import (
 	"github.com/photoview/photoview/api/graphql/auth"
 	"github.com/photoview/photoview/api/graphql/models"
 	"github.com/photoview/photoview/api/graphql/models/actions"
-	"github.com/photoview/photoview/api/scanner/face_detection"
 	"github.com/pkg/errors"
 )
 
@@ -200,21 +199,4 @@ func (r *mutationResolver) FavoriteMedia(ctx context.Context, mediaID int, favor
 	}
 
 	return user.FavoriteMedia(r.DB(ctx), mediaID, favorite)
-}
-
-func (r *mediaResolver) Faces(ctx context.Context, media *models.Media) ([]*models.ImageFace, error) {
-	if face_detection.GlobalFaceDetector == nil {
-		return []*models.ImageFace{}, nil
-	}
-
-	if media.Faces != nil {
-		return media.Faces, nil
-	}
-
-	var faces []*models.ImageFace
-	if err := r.DB(ctx).Model(&media).Association("Faces").Find(&faces); err != nil {
-		return nil, err
-	}
-
-	return faces, nil
 }

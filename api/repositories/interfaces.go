@@ -23,7 +23,7 @@ type File interface {
 
 func GetDataRepository() RepositoryReader {
 	if utils.EnvMinio.GetBool() {
-		m, err := NewMinioReader("localhost:9000", utils.EnvMinioAccessKey.GetValue(), utils.EnvMinioSecretKey.GetValue())
+		m, err := NewMinioReader(utils.EnvMinioHost.GetValue(), utils.EnvMinioAccessKey.GetValue(), utils.EnvMinioSecretKey.GetValue())
 		if err != nil {
 			panic(err)
 		}

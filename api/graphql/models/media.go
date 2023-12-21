@@ -27,9 +27,8 @@ type Media struct {
 	VideoMetadataID *int           `gorm:"index"`
 	VideoMetadata   *VideoMetadata `gorm:"constraint:OnDelete:CASCADE;"`
 	SideCarPath     *string
-	SideCarHash     *string      `gorm:"unique"`
-	Faces           []*ImageFace `gorm:"constraint:OnDelete:CASCADE;"`
-	Blurhash        *string      `gorm:""`
+	SideCarHash     *string `gorm:"unique"`
+	Blurhash        *string `gorm:""`
 }
 
 func (Media) TableName() string {

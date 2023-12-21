@@ -57,10 +57,6 @@ func main() {
 
 	exif.InitializeEXIFParser()
 
-	// if err := face_detection.InitializeFaceDetector(db); err != nil {
-	// 	log.Panicf("Could not initialize face detector: %s\n", err)
-	// }
-
 	rootRouter := mux.NewRouter()
 
 	rootRouter.Use(dataloader.Middleware(db))
